@@ -2,6 +2,7 @@ package im.kirillt.jbtask.AST
 
 abstract class Type(val name: String)
 
+class Null() : Type("null")
 
 class Interface(name: String,
                 val methods: List<Method>,
@@ -31,4 +32,4 @@ class Method(val name: String,
 
 class Field(val name: String, val type: Type, modifiers: Modifiers)
 
-data class Variable(val name:String, val type: Type)
+data class Variable(val name: String, val type: Type)
