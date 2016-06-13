@@ -3,7 +3,7 @@ package im.kirillt.jbtask.AST
 import im.kirillt.jbtask.DeclarationError
 
 abstract class Type(val name: String) {
-    override fun equals(other: Any?) = other is Type && other.name.equals(name)
+    override fun equals(other: Any?) = other is Type && other.name == name
 
     override fun hashCode() = name.hashCode()
 }
@@ -84,7 +84,7 @@ class Class(name: String,
             }
         }
         if (shouldBeImplemented.isNotEmpty() && !modifiers.isAbstract)
-            throw DeclarationError(this, shouldBeImplemented.map { it.name }.fold("Methods: "){acc, s -> acc + s+", "} + "should be implemented" )
+            throw DeclarationError(this, shouldBeImplemented.map { it.name }.fold("Methods: ") { acc, s -> acc + s + ", " } + "should be implemented")
 
     }
 

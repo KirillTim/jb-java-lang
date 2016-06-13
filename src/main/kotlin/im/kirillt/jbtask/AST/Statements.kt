@@ -6,6 +6,8 @@ interface Expression
 
 class MethodCall(val obj: Variable, val method: Method, val arguments: List<Expression>) : Statement(), Expression
 
+class MethodImplementation(val signature: Method, val body: List<Statement>)
+
 class NewVar(val variable: Variable, val expr: Expression) : Statement(), Expression
 
 class For(val loopVar: Variable, val collection: Variable) : Statement()
