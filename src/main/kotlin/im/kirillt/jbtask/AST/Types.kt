@@ -41,6 +41,8 @@ class Interface(name: String,
             checkMethodModifiers(m)
             checkReturnTypeOverload(m, all)
             checkReDeclaration(m, methods)
+            if (m.hasBody)
+                throw DeclarationError(this, m, "cannot have body")
         }
     }
 
@@ -48,9 +50,9 @@ class Interface(name: String,
     private fun checkMethodModifiers(method: Method): Boolean {
         val visibility = method.modifiers.visibility
         if (visibility == Visibility.PRIVATE || visibility == Visibility.PROTECTED)
-            throw DeclarationError(this, method, "can't be $visibility")
+            throw DeclarationError(this, method, "cannot be $visibility")
         if (method.modifiers.isFinal)
-            throw DeclarationError(this, method, "can't be final")
+            throw DeclarationError(this, method, "cannot be final")
         return true
     }
 
@@ -78,10 +80,13 @@ class Class(name: String,
             checkReDeclaration(m, methods)
             if (extends != null) {
                 for (i in extends.getAllMethods()) {
+                    if (!i.modifiers.isAbstract)
+                        shouldBeImplemented.removeAll { it.nameAndSignature == i.nameAndSignature }
                     if (i.modifiers.isFinal && m.nameAndSignature == i.nameAndSignature)
                         throw DeclarationError(this, m, "cannot override final method")
                 }
             }
+            shouldBeImplemented.removeAll { it.nameAndSignature == m.nameAndSignature }
         }
         if (shouldBeImplemented.isNotEmpty() && !modifiers.isAbstract)
             throw DeclarationError(this, shouldBeImplemented.map { it.name }.fold("Methods: ") { acc, s -> acc + s + ", " } + "should be implemented")
@@ -138,7 +143,7 @@ class Method(val name: String,
              val modifiers: Modifiers,
              val parameters: List<Variable> = listOf(),
              val throws: List<Type> = listOf(),
-             val hasBody: Boolean) {
+             val hasBody: Boolean = true) {
     val argumentsTypes: List<Type> = parameters.map { it.type }
 
     data class NameAndSignature(val name: String, val returns: Type, val argumentsTypes: List<Type>)
