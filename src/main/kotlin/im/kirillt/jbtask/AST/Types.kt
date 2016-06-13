@@ -143,8 +143,9 @@ class Method(val name: String,
              val modifiers: Modifiers,
              val parameters: List<Variable> = listOf(),
              val throws: List<Type> = listOf(),
-             val hasBody: Boolean = true) {
+             val body: List<Statement> = listOf()) {
     val argumentsTypes: List<Type> = parameters.map { it.type }
+    val hasBody: Boolean = body.isEmpty()
 
     data class NameAndSignature(val name: String, val returns: Type, val argumentsTypes: List<Type>)
 
