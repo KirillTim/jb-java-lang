@@ -3,7 +3,7 @@ package im.kirillt.jbtask.AST
 import im.kirillt.jbtask.DeclarationError
 
 abstract class Type(val name: String) {
-    override fun equals(other: Any?) = other is Type && other.name == name
+    override fun equals(other: Any?) = other is Type && other.javaClass == javaClass && other.name == name
 
     override fun hashCode() = name.hashCode()
 }
@@ -29,8 +29,6 @@ abstract class ClassOrInterface(name: String) : Type(name) {
         return true
     }
 }
-
-class Null() : Type("null")
 
 class Interface(name: String,
                 val methods: List<Method>,
@@ -145,13 +143,13 @@ class Method(val name: String,
              val throws: List<Type> = listOf(),
              val body: List<Statement> = listOf()) {
     val argumentsTypes: List<Type> = parameters.map { it.type }
-    val hasBody: Boolean = body.isEmpty()
+    val hasBody: Boolean = body.isNotEmpty()
 
     data class NameAndSignature(val name: String, val returns: Type, val argumentsTypes: List<Type>)
 
     val nameAndSignature = NameAndSignature(name, returns, argumentsTypes)
 }
 
-class Field(val name: String, val type: Type, modifiers: Modifiers)
+class Field(name: String, type: Type, modifiers: Modifiers) : Variable(name, type, modifiers.isFinal)
 
-data class Variable(val name: String, val type: Type)
+open class Variable(val name: String, val type: Type, val isFinal: Boolean = false)

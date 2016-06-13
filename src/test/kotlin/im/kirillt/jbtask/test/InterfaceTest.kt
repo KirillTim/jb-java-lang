@@ -29,8 +29,8 @@ class InterfaceTest {
 
     @Test
     fun testOK() {
-        val method1 = Method("fun", VoidType(), Modifiers(), hasBody = false)
-        val method2 = Method("fun", VoidType(), Modifiers(), listOf(Variable("i", IntegerType())), hasBody = false)
+        val method1 = Method("fun", VoidType(), Modifiers())
+        val method2 = Method("fun", VoidType(), Modifiers(), listOf(Variable("i", IntegerType())))
         val interf = Interface("interf", listOf(method1, method2))
         //i know there are tons of asserts for collections
         assertTrue(interf.getAllMethods().contains(method1))
@@ -41,8 +41,8 @@ class InterfaceTest {
     fun testIncompatibleReturnType() {
         var msg = ""
         try {
-            val method1 = Method("fun", VoidType(), Modifiers(), hasBody = false)
-            val method2 = Method("fun", IntegerType(), Modifiers(), hasBody = false)
+            val method1 = Method("fun", VoidType(), Modifiers())
+            val method2 = Method("fun", IntegerType(), Modifiers())
             Interface("interf", listOf(method1, method2))
         } catch (e: DeclarationError) {
             msg = e.message!!
@@ -56,8 +56,8 @@ class InterfaceTest {
     fun testReDeclaration() {
         var msg = ""
         try {
-            val method1 = Method("fun", VoidType(), Modifiers(), hasBody = false)
-            val method2 = Method("fun", VoidType(), Modifiers(), hasBody = false)
+            val method1 = Method("fun", VoidType(), Modifiers())
+            val method2 = Method("fun", VoidType(), Modifiers())
             Interface("interf", listOf(method1, method2))
         } catch (e: DeclarationError) {
             msg = e.message!!
@@ -68,8 +68,8 @@ class InterfaceTest {
 
     @Test
     fun testExtends() {
-        val method1 = Method("fun", VoidType(), Modifiers(), hasBody = false)
-        val method2 = Method("funInt", IntegerType(), Modifiers(), hasBody = false)
+        val method1 = Method("fun", VoidType(), Modifiers())
+        val method2 = Method("funInt", IntegerType(), Modifiers())
         val i1 = Interface("i1", listOf(method1))
         val i2 = Interface("i2", listOf(method2), listOf(i1))
         assertTrue(i2.getAllMethods().contains(method1))
