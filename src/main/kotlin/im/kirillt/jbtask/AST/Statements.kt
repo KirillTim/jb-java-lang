@@ -30,33 +30,33 @@ class VarRef(val variable: Variable) : Expression(variable.type) {
     }
 }
 
-class FieldRef(val from: Type, val field: Variable) : Expression(field.type) {
+class FieldRef(val from: Expression, val field: Variable) : Expression(field.type) {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
         val result = mutableListOf<CompilerError>()
-        if (from !is Class) {
+        if (from.type !is Class) {
             result.add(ErrorInStatement("can't access field for primitive type", this)) //TODO: fix
             return result
         }
-        val cls = ctx.classesTable[from.name]
+        val cls = ctx.classesTable[from.type.name]
         if (cls != null) {
             if (!cls.getPublicFields().any { it.name == field.name })
                 result.add(NoSuchField(cls, field))
         } else {
-            result.add(UnknownType(from, this))
+            result.add(UnknownType(from.type, this))
         }
         return result
     }
 }
 
-class MethodCall(val from: Type, val method: Method, val arguments: List<Expression>) : Expression(method.returns) {
+class MethodCall(val from: Expression, val method: Method, val arguments: List<Expression>) : Expression(method.returns) {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
         val result = mutableListOf<CompilerError>()
         result.addAll(arguments.flatMap { it.check(ctx) })
-        if (from !is ClassOrInterface) {
+        if (from.type !is ClassOrInterface) {
             result.add(ErrorInStatement("can't access field for primitive type", this)) //TODO: fix
             return result
         }
-        val cls = ctx.classesTable[from.name]
+        val cls = ctx.classesTable[from.type.name]
         if (cls != null) {
             if (!cls.getPublicMethods().any { it.nameAndSignature == method.nameAndSignature })
                 result.add(NoSuchMethod(cls, method))
@@ -64,7 +64,7 @@ class MethodCall(val from: Type, val method: Method, val arguments: List<Express
             if (method.argumentsTypes != argTypes)
                 result.add(ErrorInStatement("Incompatible types", this))
         } else {
-            result.add(UnknownType(from, this))
+            result.add(UnknownType(from.type, this))
         }
         return result
     }
@@ -112,16 +112,16 @@ class VarAssignment(val variable: Variable, val expr: Expression) : Statement() 
     }
 }
 
-class For(val loopVar: Variable, val collection: Type, val block: List<Statement>) : Statement() {
+class For(val loopVar: Variable, val collection: Expression, val block: List<Statement>) : Statement() {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
         val result = mutableListOf<CompilerError>()
         ctx.symbolTable.enterScope()
         ctx.symbolTable.addSymbol(loopVar)
-        if (collection !is Class)
-            result.add(TypeCheckError(Iterable, collection, this))
+        if (collection.type !is Class)
+            result.add(TypeCheckError(Iterable, collection.type, this))
         else {
-            if (!collection.isSubtype(Iterable))
-                result.add(TypeCheckError(Iterable, collection, this))
+            if (!collection.type.isSubtype(Iterable))
+                result.add(TypeCheckError(Iterable, collection.type, this))
         }
         for (statement in block)
             result.addAll(statement.check(ctx))
@@ -130,14 +130,14 @@ class For(val loopVar: Variable, val collection: Type, val block: List<Statement
     }
 }
 
-class IF(val condition: Expression, val thenBlock: List<Statement>, val elseBlock: List<Statement>) : Statement() {
+class If(val condition: Expression, val thenBlock: List<Statement>, val elseBlock: List<Statement>) : Statement() {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
         val result = mutableListOf<CompilerError>()
         result.addAll(condition.check(ctx))
         if (condition.type != BoolType())
             result.add(TypeCheckError(BoolType(), condition.type, this))
         ctx.symbolTable.enterScope()
-        for (statement in elseBlock)
+        for (statement in thenBlock)
             result.addAll(statement.check(ctx))
         ctx.symbolTable.exitScope()
         ctx.symbolTable.enterScope()

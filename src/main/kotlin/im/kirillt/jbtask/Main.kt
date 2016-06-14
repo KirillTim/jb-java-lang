@@ -12,6 +12,8 @@ import im.kirillt.jbtask.builtin.Literals.BoolLiteral
 import im.kirillt.jbtask.builtin.Literals.StringLiteral
 
 fun main(args: Array<String>) {
+    test1()
+    test2()
     test3()
 }
 
@@ -54,7 +56,7 @@ fun test2() {
             VarInitialization(XInt, IntLiteral),
             VarInitialization(XStr, StringLiteral),
             VarInitialization(badLoopVar, IntLiteral),
-            For(f1, badLoopVar.type, listOf(VarInitialization(XBool, BoolLiteral))),
+            For(f1, VarRef(badLoopVar), listOf(VarInitialization(XBool, BoolLiteral))),
             Return(VarRef(f1))
     )
     val m1 = Method("f1m", VoidType(), Modifiers(), body = statements)
@@ -79,8 +81,8 @@ fun test1() {
     val varF = Variable("varF", F)
     val statements = listOf<Statement>(
             VarInitialization(varF, New(F)),
-            VarInitialization(Variable("varInt", IntegerType()), FieldRef(VarRef(varF).type, f1)),
-            MethodCall(VarRef(varF).type, m2Int, listOf()),
+            VarInitialization(Variable("varInt", IntegerType()), FieldRef(VarRef(varF), f1)),
+            MethodCall(VarRef(varF), m2Int, listOf()),
             Return(VarRef(Variable("varInt", IntegerType())))
     )
     val m2 = Method("g1m", F, Modifiers(), body = statements)
