@@ -21,9 +21,13 @@ class VarRef(val variable: Variable) : Expression(variable.type) {
     }
 }
 
-class FieldRef(val from: Class, val field: Variable) : Expression(field.type) {
+class FieldRef(val from: Type, val field: Variable) : Expression(field.type) {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
         val result = mutableListOf<CompilerError>()
+        if (from !is Class) {
+            result.add(ErrorInStatement("can't access field for primitive type", this)) //TODO: fix
+            return result
+        }
         val cls = ctx.classesTable[from.name]
         if (cls != null) {
             if (!cls.getPublicFields().any { it.name == field.name })
@@ -35,10 +39,14 @@ class FieldRef(val from: Class, val field: Variable) : Expression(field.type) {
     }
 }
 
-class MethodCall(val from: ClassOrInterface, val method: Method, val arguments: List<Expression>) : Expression(method.returns) {
+class MethodCall(val from: Type, val method: Method, val arguments: List<Expression>) : Expression(method.returns) {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
         val result = mutableListOf<CompilerError>()
         result.addAll(arguments.flatMap { it.check(ctx) })
+        if (from !is ClassOrInterface) {
+            result.add(ErrorInStatement("can't access field for primitive type", this)) //TODO: fix
+            return result
+        }
         val cls = ctx.classesTable[from.name]
         if (cls != null) {
             if (!cls.getPublicMethods().any { it.nameAndSignature == method.nameAndSignature })

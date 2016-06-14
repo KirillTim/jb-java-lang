@@ -181,4 +181,6 @@ class Method(val name: String,
 
 class Field(name: String, type: Type, val modifiers: Modifiers) : Variable(name, type, modifiers.isFinal)
 
-open class Variable(val name: String, val type: Type, val isFinal: Boolean = false)
+open class Variable(val name: String, val type: Type, val isFinal: Boolean = false) {
+    override fun toString() = name
+}
