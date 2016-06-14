@@ -70,9 +70,12 @@ class MethodCall(val from: Type, val method: Method, val arguments: List<Express
     }
 }
 
-class New(cls: Class) : Expression(cls) {
+class New(val cls: Class) : Expression(cls) {
     //TODO: add constructors support
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
+        val result = mutableListOf<CompilerError>()
+        if (cls.modifiers.isAbstract)
+            result.add(ErrorInStatement("Cannot instantiate Abstract class '$cls'", this))
         return mutableListOf<CompilerError>()
     }
 }
