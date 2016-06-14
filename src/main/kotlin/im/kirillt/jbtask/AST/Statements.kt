@@ -12,6 +12,10 @@ class EmptyStatement() : Statement() {
 
 abstract class Expression(val type: Type) : Statement()
 
+class Literal(type: Type) : Expression(type) {
+    override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> = mutableListOf()
+}
+
 class VarRef(val variable: Variable) : Expression(variable.type) {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
         val result = mutableListOf<CompilerError>()
