@@ -29,4 +29,11 @@ class SymbolTable {
     fun exitScope() {
         stack.dropLast(1)
     }
+
+    fun copy() : SymbolTable { //it's crap, i know
+        val other = SymbolTable();
+        for (i in stack)
+            other.stack.add(i)
+        return other
+    }
 }

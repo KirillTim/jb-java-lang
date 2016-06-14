@@ -19,14 +19,20 @@ open class UnknownVariable(variable: Variable, statement: Statement)
 open class UnknownType(type: Type, statement: Statement)
 : ErrorInStatement("Unknown type '${type.name}'", statement)
 
+open class TypeCheckError(expected: Type, real:Type, statement: Statement)
+: ErrorInStatement("Type check error: '${expected.name}' expected, but '${real.name}' found", statement)
+
 open class WrongReturnType(type: Type, statement: Statement)
 : ErrorInStatement("Wrong return type '${type.name}'", statement)
 
 open class ReAssignToFinal(variable: Variable, statement: Statement)
-: ErrorInStatement("${variable.name} cannot be re-assigned", statement)
+: ErrorInStatement("variable '${variable.name}' cannot be re-assigned", statement)
+
+open class VariableAlreadyDefined(variable: Variable, statement: Statement)
+: ErrorInStatement("variable '${variable.name}' has already defined in this scope", statement)
 
 open class NoSuchMethod(where: ClassOrInterface, method: Method)
 : CompilerError("${where.name} have no method $method")
 
-open class NoSuchField(where: ClassOrInterface, field: Field)
+open class NoSuchField(where: ClassOrInterface, field: Variable)
 : CompilerError("${where.name} have no field ${field.name}")

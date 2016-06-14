@@ -28,13 +28,16 @@ abstract class ClassOrInterface(name: String) : Type(name) {
         }
         return true
     }
+
+    abstract fun getPublicMethods() : List<Method>
+    abstract fun getPublicFields() : List<Field>
 }
 
 class Interface(name: String,
                 val methods: List<Method>,
                 val extends: List<Interface> = listOf()) : ClassOrInterface(name) {
     init {
-        val all = getAllMethods()
+        val all = getPublicMethods()
         for (m in methods) {
             checkMethodModifiers(m)
             checkReturnTypeOverload(m, all)
@@ -54,9 +57,11 @@ class Interface(name: String,
         return true
     }
 
-    fun getAllMethods(): List<Method> =
-            methods.toMutableList() + extends.flatMap { it.getAllMethods() }.distinctBy { it.nameAndSignature }
+    override fun getPublicMethods(): List<Method> =
+            methods.toMutableList() + extends.flatMap { it.getPublicMethods() }
+                    .distinctBy { it.nameAndSignature }.filter { it.modifiers.visibility== Visibility.PUBLIC }
 
+    override fun getPublicFields(): List<Field> = listOf()
 }
 
 class Class(name: String,
@@ -67,7 +72,7 @@ class Class(name: String,
             val implements: List<Interface> = listOf()) : ClassOrInterface(name) {
 
     init {
-        val shouldBeImplemented = implements.flatMap { it.getAllMethods() }.toMutableList()
+        val shouldBeImplemented = implements.flatMap { it.getPublicMethods() }.toMutableList()
         if (extends != null) {
             if (extends.modifiers.isFinal)
                 throw DeclarationError(this, "cannot inherit from final ${extends.name}")
@@ -77,7 +82,7 @@ class Class(name: String,
             checkMethodModifiers(m)
             checkReDeclaration(m, methods)
             if (extends != null) {
-                for (i in extends.getAllMethods()) {
+                for (i in extends.getPublicMethods()) {
                     if (!i.modifiers.isAbstract)
                         shouldBeImplemented.removeAll { it.nameAndSignature == i.nameAndSignature }
                     if (i.modifiers.isFinal && m.nameAndSignature == i.nameAndSignature)
@@ -110,12 +115,21 @@ class Class(name: String,
     }
 
     //TODO: return 'last overrided' version of each method
-    fun getAllMethods(): List<Method> {
-        val result = implements.flatMap { it.getAllMethods() }.toMutableList()
+    //TODO: return methods visible from special class
+    override fun getPublicMethods(): List<Method> {
+        val result = implements.flatMap { it.getPublicMethods() }.toMutableList()
         if (extends != null)
-            result.addAll(extends.getAllMethods())
+            result.addAll(extends.getPublicMethods())
         result.addAll(methods)
-        return result.distinctBy { it.nameAndSignature }
+        return result.distinctBy { it.nameAndSignature }.filter { it.modifiers.visibility == Visibility.PUBLIC }
+    }
+
+    override fun getPublicFields(): List<Field> {
+        val result = implements.flatMap { it.getPublicFields() }.toMutableList()
+        if (extends != null)
+            result.addAll(extends.getPublicFields())
+        result.addAll(fields)
+        return result.distinctBy { it.name }.filter { it.modifiers.visibility == Visibility.PUBLIC }
     }
 }
 
@@ -134,7 +148,16 @@ enum class Visibility {
 class Modifiers(val visibility: Visibility = Visibility.PUBLIC,
                 val isAbstract: Boolean = false,
                 val isFinal: Boolean = false,
-                val isStatic: Boolean = false)
+                val isStatic: Boolean = false) {
+    override fun toString(): String {
+        var result = ""
+        if (isAbstract)
+            result = "abstract"
+        if (isFinal)
+            result = "final"
+        return result + " " + visibility
+    }
+}
 
 class Method(val name: String,
              val returns: Type,
@@ -148,8 +171,14 @@ class Method(val name: String,
     data class NameAndSignature(val name: String, val returns: Type, val argumentsTypes: List<Type>)
 
     val nameAndSignature = NameAndSignature(name, returns, argumentsTypes)
+
+    override fun toString(): String {
+        val throwStr = if (throws.isNotEmpty()) throws.joinToString("throws ", ", ") else ""
+        val typesStr = argumentsTypes.joinToString(", ")
+        return "$modifiers $returns $name($typesStr) $throwStr"
+    }
 }
 
-class Field(name: String, type: Type, modifiers: Modifiers) : Variable(name, type, modifiers.isFinal)
+class Field(name: String, type: Type, val modifiers: Modifiers) : Variable(name, type, modifiers.isFinal)
 
 open class Variable(val name: String, val type: Type, val isFinal: Boolean = false)

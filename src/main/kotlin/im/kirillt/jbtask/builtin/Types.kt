@@ -4,6 +4,6 @@ import im.kirillt.jbtask.AST.Type
 
 class VoidType() : Type("void")
 
-class ThrowableType() : Type("Throwable")
+class BoolType() : Type("bool")
 
 class IntegerType() : Type("int")

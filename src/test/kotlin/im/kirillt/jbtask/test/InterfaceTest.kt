@@ -33,8 +33,8 @@ class InterfaceTest {
         val method2 = Method("fun", VoidType(), Modifiers(), listOf(Variable("i", IntegerType())))
         val interf = Interface("interf", listOf(method1, method2))
         //i know there are tons of asserts for collections
-        assertTrue(interf.getAllMethods().contains(method1))
-        assertTrue(interf.getAllMethods().contains(method2))
+        assertTrue(interf.getPublicMethods().contains(method1))
+        assertTrue(interf.getPublicMethods().contains(method2))
     }
 
     @Test
@@ -72,8 +72,8 @@ class InterfaceTest {
         val method2 = Method("funInt", IntegerType(), Modifiers())
         val i1 = Interface("i1", listOf(method1))
         val i2 = Interface("i2", listOf(method2), listOf(i1))
-        assertTrue(i2.getAllMethods().contains(method1))
-        assertTrue(i2.getAllMethods().contains(method2))
+        assertTrue(i2.getPublicMethods().contains(method1))
+        assertTrue(i2.getPublicMethods().contains(method2))
 
     }
 }
