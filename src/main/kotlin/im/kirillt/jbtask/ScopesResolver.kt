@@ -10,6 +10,7 @@ class ScopesResolver(val classesTable: Map<String, ClassOrInterface>) {
         ctx.symbolTable.enterScope()
         for (f in cls.fields)
             ctx.symbolTable.addSymbol(f)
+        ctx.symbolTable.enterScope()
         val result = mutableListOf<CompilerError>()
         for (statement in method.body)
             result.addAll(statement.check(ctx))

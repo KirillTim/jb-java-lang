@@ -1,10 +1,51 @@
 package im.kirillt.jbtask
 
 import im.kirillt.jbtask.AST.*
-import im.kirillt.jbtask.builtin.IntegerType
-import im.kirillt.jbtask.builtin.VoidType
+import im.kirillt.jbtask.builtin.BuiltInPrimitives
+import im.kirillt.jbtask.builtin.BuiltInPrimitives.IntegerType
+import im.kirillt.jbtask.builtin.BuiltInPrimitives.StringType
+import im.kirillt.jbtask.builtin.BuiltInPrimitives.VoidType
+import im.kirillt.jbtask.builtin.BuiltInPrimitives.BoolType
+import im.kirillt.jbtask.builtin.Literals.IntLiteral
+import im.kirillt.jbtask.builtin.Literals.BoolLiteral
+import im.kirillt.jbtask.builtin.Literals.StringLiteral
 
-fun main(args:Array<String>) {
+fun main(args: Array<String>) {
+    //test2()
+}
+
+fun test2() {
+    //loop var type error
+    //int literal
+    //wrong return type
+    //for loop scope
+    val f1 = Field("f1", IntegerType(), Modifiers())
+    val badLoopVar = Variable("varQ", IntegerType())
+    val XInt = Variable("X", IntegerType())
+    val XStr = Variable("X", StringType())
+    val XBool = Variable("X", BoolType())
+    val statements = listOf<Statement>(
+            VarCreation(XInt, IntLiteral),
+            VarCreation(XStr, StringLiteral),
+            VarCreation(badLoopVar, IntLiteral),
+            For(f1, badLoopVar.type, listOf(VarCreation(XBool, BoolLiteral))),
+            Return(VarRef(f1))
+    )
+    val m1 = Method("f1m", VoidType(), Modifiers(), body = statements)
+    val F = Class("F", Modifiers(), listOf(f1), listOf(m1))
+    val classesTable = mutableMapOf<String, ClassOrInterface>()
+    classesTable["F"] = F
+    val resolver = ScopesResolver(classesTable)
+    val res = resolver.check(m1, F)
+    res.forEach { println(it) }
+    /*
+    * Compiler error : 'variable 'X: string' has already defined in this scope in statement 'im.kirillt.jbtask.AST.VarCreation@7699a589''
+    * Compiler error : 'Type check error: 'Iterable' expected, but 'int' found in statement 'im.kirillt.jbtask.AST.For@58372a00''
+    * Compiler error : 'Wrong return type 'int' in statement 'im.kirillt.jbtask.AST.Return@16b98e56''
+    * */
+}
+
+fun test1() {
     val f1 = Field("f1", IntegerType(), Modifiers())
     val m1 = Method("f1m", IntegerType(), Modifiers(), body = listOf(EmptyStatement()))
     val F = Class("F", Modifiers(), listOf(f1), listOf(m1))
@@ -13,16 +54,22 @@ fun main(args:Array<String>) {
     val statements = listOf<Statement>(
             VarCreation(varF, New(F)),
             VarCreation(Variable("varInt", IntegerType()), FieldRef(VarRef(varF).type, f1)),
-            MethodCall(VarRef(varF).type,  m2Int, listOf()),
+            MethodCall(VarRef(varF).type, m2Int, listOf()),
             Return(VarRef(Variable("varInt", IntegerType())))
     )
-    val m2 = Method("g1m", F, Modifiers(),body = statements)
+    val m2 = Method("g1m", F, Modifiers(), body = statements)
 
-    val G = Class("G", Modifiers(), listOf(), listOf(m2, m2Int))
+    val G = Class("G", Modifiers(), listOf<Field>(Field("VarF", StringType(), Modifiers())), listOf(m2, m2Int))
+    //VarF in class G shows that scoping works
     val classesTable = mutableMapOf<String, ClassOrInterface>()
     classesTable["F"] = F
     classesTable["G"] = G
     val resolver = ScopesResolver(classesTable)
     val res = resolver.check(m2, G)
     res.forEach { println(it) }
+    /*
+    * Compiler error : 'F have no method  public im.kirillt.jbtask.AST.Class@46 g1mInt(im.kirillt.jbtask.builtin.BuiltInPrimitives$IntegerType@197ef) '
+    * Compiler error : 'Incompatible types in statement 'im.kirillt.jbtask.AST.MethodCall@7699a589''
+    * Compiler error : 'Wrong return type 'int' in statement 'im.kirillt.jbtask.AST.Return@58372a00''
+    * */
 }

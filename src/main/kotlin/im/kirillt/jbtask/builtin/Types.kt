@@ -22,6 +22,7 @@ object BuiltInClasses {
 }
 
 object Literals {
-    val stringLiteral = Literal(BuiltInPrimitives.StringType())
-    val intLiteral = Literal(BuiltInPrimitives.IntegerType())
+    val StringLiteral = Literal(BuiltInPrimitives.StringType())
+    val IntLiteral = Literal(BuiltInPrimitives.IntegerType())
+    val BoolLiteral= Literal(BuiltInPrimitives.BoolType())
 }

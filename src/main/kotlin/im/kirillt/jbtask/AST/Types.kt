@@ -6,6 +6,8 @@ abstract class Type(val name: String) {
     override fun equals(other: Any?) = other is Type && other.javaClass == javaClass && other.name == name
 
     override fun hashCode() = name.hashCode()
+
+    override fun toString() = name
 }
 
 abstract class ClassOrInterface(name: String) : Type(name) {
@@ -131,6 +133,14 @@ class Class(name: String,
         result.addAll(fields)
         return result.distinctBy { it.name }.filter { it.modifiers.visibility == Visibility.PUBLIC }
     }
+
+    fun isChildOrSameAs(cls: Class): Boolean {
+        if (extends == null)
+            return false
+        if (extends.name == cls.name)
+            return true
+        return extends.isChildOrSameAs(cls)
+    }
 }
 
 enum class Visibility {
@@ -182,5 +192,5 @@ class Method(val name: String,
 class Field(name: String, type: Type, val modifiers: Modifiers) : Variable(name, type, modifiers.isFinal)
 
 open class Variable(val name: String, val type: Type, val isFinal: Boolean = false) {
-    override fun toString() = name
+    override fun toString() = "$name: $type"
 }

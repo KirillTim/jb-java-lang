@@ -5,8 +5,8 @@ import im.kirillt.jbtask.AST.Method
 import im.kirillt.jbtask.AST.Modifiers
 import im.kirillt.jbtask.AST.Variable
 import im.kirillt.jbtask.DeclarationError
-import im.kirillt.jbtask.builtin.VoidType
-import im.kirillt.jbtask.builtin.IntegerType
+import im.kirillt.jbtask.builtin.BuiltInPrimitives.VoidType
+import im.kirillt.jbtask.builtin.BuiltInPrimitives.IntegerType
 import org.junit.rules.ExpectedException
 import org.junit.Test
 import org.junit.Assert.*

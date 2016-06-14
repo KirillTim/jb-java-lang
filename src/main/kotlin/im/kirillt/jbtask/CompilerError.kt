@@ -14,7 +14,7 @@ open class ErrorInStatement(msg: String, statement: Statement)
 : CompilerError("$msg in statement '$statement'")
 
 open class UnknownVariable(variable: Variable, statement: Statement)
-: ErrorInStatement("Unknown variable '${variable.name}'", statement)
+: ErrorInStatement("Unknown variable '${variable}'", statement)
 
 open class UnknownType(type: Type, statement: Statement)
 : ErrorInStatement("Unknown type '${type.name}'", statement)
@@ -26,10 +26,10 @@ open class WrongReturnType(type: Type, statement: Statement)
 : ErrorInStatement("Wrong return type '${type.name}'", statement)
 
 open class ReAssignToFinal(variable: Variable, statement: Statement)
-: ErrorInStatement("variable '${variable.name}' cannot be re-assigned", statement)
+: ErrorInStatement("variable '${variable}' cannot be re-assigned", statement)
 
 open class VariableAlreadyDefined(variable: Variable, statement: Statement)
-: ErrorInStatement("variable '${variable.name}' has already defined in this scope", statement)
+: ErrorInStatement("variable '${variable}' has already defined in this scope", statement)
 
 open class NoSuchMethod(where: ClassOrInterface, method: Method)
 : CompilerError("${where.name} have no method $method")

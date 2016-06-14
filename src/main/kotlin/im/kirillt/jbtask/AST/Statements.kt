@@ -1,6 +1,9 @@
 package im.kirillt.jbtask.AST
 
 import im.kirillt.jbtask.*
+import im.kirillt.jbtask.builtin.BuiltInPrimitives.BoolType
+import im.kirillt.jbtask.builtin.BuiltInPrimitives.VoidType
+import im.kirillt.jbtask.builtin.BuiltInClasses.Iterable
 
 abstract class Statement {
     abstract fun check(ctx: ScopesResolver.Context): MutableList<CompilerError>
@@ -74,7 +77,7 @@ class New(cls: Class) : Expression(cls) {
 
 class VarCreation(val variable: Variable, val expr: Expression) : Statement() {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
-        val result =  expr.check(ctx)
+        val result = expr.check(ctx)
         if (ctx.symbolTable.isDefinedInCurrentScope(variable.name))
             result.add(VariableAlreadyDefined(variable, this))
         else {
@@ -88,9 +91,9 @@ class VarCreation(val variable: Variable, val expr: Expression) : Statement() {
 
 class VarAssignment(val variable: Variable, val expr: Expression) : Statement() {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
-        val result =  expr.check(ctx)
+        val result = expr.check(ctx)
         val prev = ctx.symbolTable.findSymbol(variable.name)
-        if  (prev != null) {
+        if (prev != null) {
             if (prev.isFinal)
                 result.add(ReAssignToFinal(variable, this))
             else {
@@ -104,23 +107,56 @@ class VarAssignment(val variable: Variable, val expr: Expression) : Statement() 
     }
 }
 
-class For(val loopVar: Variable, val collection: Variable, val block: List<Statement>) : Statement() {
+class For(val loopVar: Variable, val collection: Type, val block: List<Statement>) : Statement() {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
-        throw UnsupportedOperationException()
+        val result = mutableListOf<CompilerError>()
+        ctx.symbolTable.enterScope()
+        ctx.symbolTable.addSymbol(loopVar)
+        if (collection !is Class)
+            result.add(TypeCheckError(Iterable, collection, this))
+        else {
+            if (!collection.isChildOrSameAs(Iterable))
+                result.add(TypeCheckError(Iterable, collection, this))
+        }
+        for (statement in block)
+            result.addAll(statement.check(ctx))
+        ctx.symbolTable.exitScope()
+        return result
     }
 }
 
 class IF(val condition: Expression, val thenBlock: List<Statement>, val elseBlock: List<Statement>) : Statement() {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
-        throw UnsupportedOperationException()
+        val result = mutableListOf<CompilerError>()
+        result.addAll(condition.check(ctx))
+        if (condition.type != BoolType())
+            result.add(TypeCheckError(BoolType(), condition.type, this))
+        ctx.symbolTable.enterScope()
+        for (statement in elseBlock)
+            result.addAll(statement.check(ctx))
+        ctx.symbolTable.exitScope()
+        ctx.symbolTable.enterScope()
+        for (statement in elseBlock)
+            result.addAll(statement.check(ctx))
+        ctx.symbolTable.exitScope()
+        return result
     }
 }
 
-class Return(val expr: Expression) : Statement() {
+//null means no value returned
+class Return(val expr: Expression? = null) : Statement() {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
-        val result = expr.check(ctx)
-        if (expr.type != ctx.returnType)
-            result.add(WrongReturnType(expr.type, this))
+        val result = mutableListOf<CompilerError>()
+        if (expr != null) {
+            result.addAll(expr.check(ctx))
+            if (expr.type != ctx.returnType)
+                result.add(WrongReturnType(expr.type, this))
+            return result
+        } else {
+            if (ctx.returnType != VoidType()) {
+                result.add(WrongReturnType(VoidType(), this))
+            }
+        }
         return result
     }
 }
