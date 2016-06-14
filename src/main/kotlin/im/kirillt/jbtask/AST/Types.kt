@@ -136,14 +136,14 @@ class Class(name: String,
         return result.distinctBy { it.name }.filter { it.modifiers.visibility == Visibility.PUBLIC }
     }
 
-    fun isChildOrSameAs(cls: Class): Boolean {
+    fun isSubtype(cls: Class): Boolean {
         if (name == cls.name)
             return true
         if (extends == null)
             return false
         if (extends.name == cls.name)
             return true
-        return extends.isChildOrSameAs(cls)
+        return extends.isSubtype(cls)
     }
 }
 
@@ -180,7 +180,7 @@ class Method(val name: String,
              val throws: List<Class> = listOf(),
              val body: List<Statement> = listOf()) {
     init {
-        val badExceptionTypes = throws.filter { !it.isChildOrSameAs(CheckedException) }
+        val badExceptionTypes = throws.filter { !it.isSubtype(CheckedException) }
         if (badExceptionTypes.isNotEmpty())
             throw ASTException("Only subclasses of $CheckedException can be thrown")
     }

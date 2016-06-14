@@ -80,7 +80,7 @@ class New(val cls: Class) : Expression(cls) {
     }
 }
 
-class VarCreation(val variable: Variable, val expr: Expression) : Statement() {
+class VarInitialization(val variable: Variable, val expr: Expression) : Statement() {
     override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
         val result = expr.check(ctx)
         if (ctx.symbolTable.isDefinedInCurrentScope(variable.name))
@@ -120,7 +120,7 @@ class For(val loopVar: Variable, val collection: Type, val block: List<Statement
         if (collection !is Class)
             result.add(TypeCheckError(Iterable, collection, this))
         else {
-            if (!collection.isChildOrSameAs(Iterable))
+            if (!collection.isSubtype(Iterable))
                 result.add(TypeCheckError(Iterable, collection, this))
         }
         for (statement in block)
@@ -175,10 +175,10 @@ class Throw(val expr: Expression) : Statement() {
             badType = true
         else {
             if (expr.type is Class) {
-                if (!expr.type.isChildOrSameAs(Throwable))
+                if (!expr.type.isSubtype(Throwable))
                     badType = true
                 else {
-                    if (expr.type.isChildOrSameAs(CheckedException) && !ctx.catchedExceptions.isCatched(expr.type))
+                    if (expr.type.isSubtype(CheckedException) && !ctx.catchedExceptions.isCatched(expr.type))
                         result.add(ErrorInStatement("Unhandled exception '${expr.type}'", this))
                 }
             }
@@ -194,7 +194,7 @@ class TryCatch(val exceptions: List<Class>, val tryBlock: List<Statement>, val c
         val result = mutableListOf<CompilerError>()
         val correct = mutableListOf<Class>()
         for (e in exceptions) {
-            if (!e.isChildOrSameAs(Throwable))
+            if (!e.isSubtype(Throwable))
                 result.add(ErrorInStatement("Only subclasses of $Throwable can be caught", this))
             else
                 correct += e

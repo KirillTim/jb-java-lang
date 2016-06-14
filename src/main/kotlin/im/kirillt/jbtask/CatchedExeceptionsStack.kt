@@ -12,7 +12,7 @@ class CatchedExeceptionsStack {
     fun isCatched(exception: Class): Boolean {
         for (i in stack.reversed()) {
             for (cls in i.values)
-                if (exception.isChildOrSameAs(cls))
+                if (exception.isSubtype(cls))
                     return true
         }
         return false

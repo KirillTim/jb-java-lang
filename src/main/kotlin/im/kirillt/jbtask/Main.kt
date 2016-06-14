@@ -51,10 +51,10 @@ fun test2() {
     val XStr = Variable("X", StringType())
     val XBool = Variable("X", BoolType())
     val statements = listOf<Statement>(
-            VarCreation(XInt, IntLiteral),
-            VarCreation(XStr, StringLiteral),
-            VarCreation(badLoopVar, IntLiteral),
-            For(f1, badLoopVar.type, listOf(VarCreation(XBool, BoolLiteral))),
+            VarInitialization(XInt, IntLiteral),
+            VarInitialization(XStr, StringLiteral),
+            VarInitialization(badLoopVar, IntLiteral),
+            For(f1, badLoopVar.type, listOf(VarInitialization(XBool, BoolLiteral))),
             Return(VarRef(f1))
     )
     val m1 = Method("f1m", VoidType(), Modifiers(), body = statements)
@@ -78,8 +78,8 @@ fun test1() {
     val m2Int = Method("g1mInt", F, Modifiers(), listOf(Variable("param1", IntegerType())), body = listOf(EmptyStatement()))
     val varF = Variable("varF", F)
     val statements = listOf<Statement>(
-            VarCreation(varF, New(F)),
-            VarCreation(Variable("varInt", IntegerType()), FieldRef(VarRef(varF).type, f1)),
+            VarInitialization(varF, New(F)),
+            VarInitialization(Variable("varInt", IntegerType()), FieldRef(VarRef(varF).type, f1)),
             MethodCall(VarRef(varF).type, m2Int, listOf()),
             Return(VarRef(Variable("varInt", IntegerType())))
     )
