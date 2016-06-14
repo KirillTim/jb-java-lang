@@ -137,6 +137,8 @@ class Class(name: String,
     }
 
     fun isChildOrSameAs(cls: Class): Boolean {
+        if (name == cls.name)
+            return true
         if (extends == null)
             return false
         if (extends.name == cls.name)

@@ -1,9 +1,11 @@
 package im.kirillt.jbtask.AST
 
 import im.kirillt.jbtask.*
+import im.kirillt.jbtask.builtin.BuiltInClasses.CheckedException
 import im.kirillt.jbtask.builtin.BuiltInPrimitives.BoolType
 import im.kirillt.jbtask.builtin.BuiltInPrimitives.VoidType
 import im.kirillt.jbtask.builtin.BuiltInClasses.Iterable
+import im.kirillt.jbtask.builtin.BuiltInClasses.Throwable
 
 abstract class Statement {
     abstract fun check(ctx: ScopesResolver.Context): MutableList<CompilerError>
@@ -161,4 +163,52 @@ class Return(val expr: Expression? = null) : Statement() {
     }
 }
 
-//TODO: try/catch throw
+class Throw(val expr: Expression) : Statement() {
+    override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
+        val result = mutableListOf<CompilerError>()
+        result.addAll(expr.check(ctx))
+        var badType = false
+        if (expr.type !is Class)
+            badType = true
+        else {
+            if (expr.type is Class) {
+                if (!expr.type.isChildOrSameAs(Throwable))
+                    badType = true
+                else {
+                    if (expr.type.isChildOrSameAs(CheckedException) && !ctx.catchedExceptions.isCatched(expr.type))
+                        result.add(ErrorInStatement("Unhandled exception '${expr.type}'", this))
+                }
+            }
+        }
+        if (badType)
+            result.add(ErrorInStatement("Only subclasses of $Throwable can be thrown", this))
+        return result
+    }
+}
+
+class TryCatch(val exceptions: List<Class>, val tryBlock: List<Statement>, val catchBlock: List<Statement>) : Statement() {
+    override fun check(ctx: ScopesResolver.Context): MutableList<CompilerError> {
+        val result = mutableListOf<CompilerError>()
+        val correct = mutableListOf<Class>()
+        for (e in exceptions) {
+            if (!e.isChildOrSameAs(Throwable))
+                result.add(ErrorInStatement("Only subclasses of $Throwable can be caught", this))
+            else
+                correct += e
+        }
+        //TODO: remove copy-paste
+        ctx.catchedExceptions.enterScope()
+        correct.forEach { ctx.catchedExceptions.addException(it) }
+        ctx.symbolTable.enterScope()
+        for (statement in tryBlock)
+            result.addAll(statement.check(ctx))
+        ctx.symbolTable.exitScope()
+        ctx.catchedExceptions.exitScope()
+
+        ctx.symbolTable.enterScope()
+        for (statement in catchBlock)
+            result.addAll(statement.check(ctx))
+        ctx.symbolTable.exitScope()
+        return result
+    }
+}

@@ -1,7 +1,8 @@
 package im.kirillt.jbtask
 
 import im.kirillt.jbtask.AST.*
-import im.kirillt.jbtask.builtin.BuiltInPrimitives
+import im.kirillt.jbtask.builtin.BuiltInClasses.CheckedException
+import im.kirillt.jbtask.builtin.BuiltInClasses.Throwable
 import im.kirillt.jbtask.builtin.BuiltInPrimitives.IntegerType
 import im.kirillt.jbtask.builtin.BuiltInPrimitives.StringType
 import im.kirillt.jbtask.builtin.BuiltInPrimitives.VoidType
@@ -11,7 +12,32 @@ import im.kirillt.jbtask.builtin.Literals.BoolLiteral
 import im.kirillt.jbtask.builtin.Literals.StringLiteral
 
 fun main(args: Array<String>) {
-    //test2()
+    test3()
+}
+
+fun test3() {
+    val RunTimeEx = Class("RunTimeEx", Modifiers(), listOf(), listOf(), Throwable)
+    val RunTimeExExtended = Class("RunTimeExExtended", Modifiers(), listOf(), listOf(), RunTimeEx)
+    val CheckedEx = Class("CheckedEx", Modifiers(), listOf(), listOf(), CheckedException)
+    val CheckedExExtended = Class("CheckedExExtended", Modifiers(), listOf(), listOf(), CheckedEx)
+    val statements = listOf<Statement>(
+            Throw(New(RunTimeEx)), //OK
+            Throw(New(CheckedEx)), //Error
+            TryCatch(listOf(CheckedEx, RunTimeEx),
+                    listOf(Throw(New(CheckedExExtended)), Throw(New(CheckedEx)))/*OK*/,
+                    listOf(EmptyStatement())),
+            Return()
+    )
+    val m1 = Method("f1m", VoidType(), Modifiers(), body = statements, throws = listOf(CheckedExExtended))
+    val F = Class("F", Modifiers(), listOf(), listOf(m1))
+    val classesTable = mutableMapOf<String, ClassOrInterface>()
+    classesTable["F"] = F
+    val resolver = ScopesResolver(classesTable)
+    val res = resolver.check(m1, F)
+    res.forEach { println(it) }
+    /*
+    * Compiler error : 'Unhandled exception 'CheckedEx' in statement 'im.kirillt.jbtask.AST.Throw@7699a589''
+    * */
 }
 
 fun test2() {
