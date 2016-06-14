@@ -1,6 +1,8 @@
 package im.kirillt.jbtask.AST
 
+import im.kirillt.jbtask.ASTException
 import im.kirillt.jbtask.DeclarationError
+import im.kirillt.jbtask.builtin.BuiltInClasses.CheckedException
 
 abstract class Type(val name: String) {
     override fun equals(other: Any?) = other is Type && other.javaClass == javaClass && other.name == name
@@ -173,8 +175,13 @@ class Method(val name: String,
              val returns: Type,
              val modifiers: Modifiers,
              val parameters: List<Variable> = listOf(),
-             val throws: List<Type> = listOf(),
+             val throws: List<Class> = listOf(),
              val body: List<Statement> = listOf()) {
+    init {
+        val badExceptionTypes = throws.filter { !it.isChildOrSameAs(CheckedException) }
+        if (badExceptionTypes.isNotEmpty())
+            throw ASTException("Only subclasses of $CheckedException can be thrown")
+    }
     val argumentsTypes: List<Type> = parameters.map { it.type }
     val hasBody: Boolean = body.isNotEmpty()
 

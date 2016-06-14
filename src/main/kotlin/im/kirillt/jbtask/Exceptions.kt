@@ -2,7 +2,7 @@ package im.kirillt.jbtask
 
 import im.kirillt.jbtask.AST.*
 
-open class ASTException(msg: String) : Throwable(msg)
+open class ASTException(val msg: String) : Throwable(msg)
 
 open class DeclarationError : ASTException {
     constructor(what: Type, msg: String) : super("${what.name}: $msg")
